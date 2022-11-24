@@ -17,6 +17,28 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
 
+        const usersCollection = client.db('wheelmania').collection('users');
+
+        //storing users info
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            // console.log(user);
+
+            const query = {}
+            const allUsers = await usersCollection.find(query).toArray();
+            const existingUser = allUsers.find(existingUser => existingUser.email === user.email)
+            // console.log('existing', existingUser)
+
+            if (existingUser) {
+                return;
+            }
+            else {
+                const result = await usersCollection.insertOne(user);
+                res.send(result);
+            }
+
+        });
+
 
     }
     finally {
