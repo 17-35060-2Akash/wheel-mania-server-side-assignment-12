@@ -27,6 +27,23 @@ async function run() {
             res.send(categories);
         });
 
+
+
+        //get jwt token
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: '10h' });
+                return res.send({ accessToken: token });
+            }
+
+            res.status(403).send({ accessToken: '' });
+        });
+
+
+        /// users ///
         //storing users info
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -46,6 +63,22 @@ async function run() {
             }
 
         });
+
+        //getting all sellers
+        app.get('/users/sellers', async (req, res) => {
+            const query = { role: 'seller' };
+            const sellers = await usersCollection.find(query).toArray();
+            res.send(sellers);
+        });
+
+        //getting all buyers
+        app.get('/users/buyers', async (req, res) => {
+            const query = { role: 'buyer' };
+            const buyers = await usersCollection.find(query).toArray();
+            res.send(buyers);
+        });
+
+
 
 
     }
