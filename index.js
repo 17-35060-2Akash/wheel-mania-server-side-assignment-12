@@ -18,6 +18,14 @@ async function run() {
     try {
 
         const usersCollection = client.db('wheelmania').collection('users');
+        const categoriesCollection = client.db('wheelmania').collection('categories');
+
+        //using categories collection
+        app.get('/categories', async (req, res) => {
+            const query = {};
+            const categories = await categoriesCollection.find(query).toArray();
+            res.send(categories);
+        });
 
         //storing users info
         app.post('/users', async (req, res) => {
