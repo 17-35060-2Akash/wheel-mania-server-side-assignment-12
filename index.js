@@ -63,11 +63,19 @@ async function run() {
             next();
         };
 
-        //using categories collection
+        ///using categories collection///
         app.get('/categories', async (req, res) => {
             const query = {};
             const categories = await categoriesCollection.find(query).toArray();
             res.send(categories);
+        });
+
+        //getting per category data
+        app.get('/category/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { category_id: id };
+            const products = await productsCollection.find(query).toArray();
+            res.send(products);
         });
 
 
@@ -164,13 +172,22 @@ async function run() {
 
 
 
+        ///checking if buyer///
+        app.get('/users/buyer/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            // console.log(user)
+            res.send({ isBuyer: user?.role === 'buyer' });
+        });
+
         ///checking if seller///
         app.get('/users/seller/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email }
             const user = await usersCollection.findOne(query);
             // console.log(user)
-            res.send({ isAdmin: user?.role === 'seller' });
+            res.send({ isSeller: user?.role === 'seller' });
         });
 
 
