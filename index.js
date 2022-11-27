@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 //middlewares
 app.use(cors());
@@ -38,6 +39,7 @@ async function run() {
         const categoriesCollection = client.db('wheelmania').collection('categories');
         const productsCollection = client.db('wheelmania').collection('products');
         const ordersCollection = client.db('wheelmania').collection('orders');
+        const wishListCollection = client.db('wheelmania').collection('wishlistproducts');
 
 
         ///verify buyer middleware
@@ -93,6 +95,33 @@ async function run() {
 
 
 
+
+
+        ///stripe///
+        //stripe payment api
+        app.post('/create-payment-intent', async (req, res) => {
+            const order = req.body;
+            const price = order.resale_price;
+            const amount = price * 100;
+            console.log(amount);
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ]
+
+            });
+            console.log(paymentIntent.client_secret)
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
+
+
+
         //get jwt token(storing to LS)
         app.get('/jwt', async (req, res) => {
             const email = req.query.email;
@@ -137,6 +166,12 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const result = await productsCollection.deleteOne(query);
             res.send(result);
+        });
+
+        app.get('/allproducts', async (req, res) => {
+            const query = {};
+            const products = await productsCollection.find(query).toArray();
+            res.send(products);
         });
 
 
@@ -249,6 +284,52 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
+
+
+        ///wishlist 
+        //add wishlist item
+        app.post('/wishlistproducts', async (req, res) => {
+            const product = req.body;
+
+            const query = {};
+            const allproducts = await wishListCollection.find(query).toArray();
+
+            const existingProduct = allproducts.find(existingProduct => existingProduct.product_id === product.product_id && existingProduct.user_email === product.user_email);
+
+            if (existingProduct) {
+                res.send({ acknowledged: false })
+            }
+            else {
+                const result = await wishListCollection.insertOne(product);
+                res.send(result);
+            }
+        });
+
+        //getting all wishlists
+        app.get('/wishlistproducts', async (req, res) => {
+            const userEmail = req.query.user_email;
+            const query = { user_email: userEmail };
+            const wLProducts = await wishListCollection.find(query).toArray();
+
+            const filter = {};
+            const products = await productsCollection.find(filter).toArray();
+
+            /* // console.log(products);
+             
+            wLProducts.forEach(wl=>{
+                const matchedProduct=products.filter(product=>)
+            }) */
+
+
+            res.send(wLProducts);
+        });
+
+
+
+
+
+
+
 
 
 
