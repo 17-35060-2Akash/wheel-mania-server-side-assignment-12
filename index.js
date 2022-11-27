@@ -141,6 +141,15 @@ async function run() {
 
         });
 
+        //delete user
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
+            res.send(result);
+        });
+
+
         //getting all sellers
         app.get('/users/sellers', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.query.email;
@@ -168,6 +177,31 @@ async function run() {
             const query = { role: 'buyer' };
             const buyers = await usersCollection.find(query).toArray();
             res.send(buyers);
+        });
+
+        //getting a seller
+        app.get('/users/seller', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const seller = await usersCollection.findOne(query);
+            res.send(seller);
+        });
+
+
+
+        ///make seller verified///
+        app.put('/users/verify/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+
+            const updatedDoc = {
+                $set: {
+                    verification: 'verified'
+                }
+            };
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
         });
 
 
