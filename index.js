@@ -37,7 +37,20 @@ async function run() {
         const usersCollection = client.db('wheelmania').collection('users');
         const categoriesCollection = client.db('wheelmania').collection('categories');
         const productsCollection = client.db('wheelmania').collection('products');
+        const ordersCollection = client.db('wheelmania').collection('orders');
 
+
+        ///verify buyer middleware
+        const verifyBuyer = async (req, res, next) => {
+            // console.log(req.decoded.email);
+            const decodedEmail = req.decoded.email;
+            const queryEmail = { email: decodedEmail };
+            const user = await usersCollection.findOne(queryEmail);
+            if (user.role !== 'buyer') {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
+            next();
+        };
 
         ///verify seller middleware
         const verifySeller = async (req, res, next) => {
@@ -118,6 +131,39 @@ async function run() {
             res.send(result);
         });
 
+        //deleting a product
+        app.delete('/products/:id', verifyJWT, verifySeller, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        });
+
+
+        ///orders///
+        //inserting an order
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            const result = await ordersCollection.insertOne(order);
+            res.send(result);
+        });
+
+        //getting all the orders
+        app.get('/orders', async (req, res) => {
+            const query = {};
+            const orders = await ordersCollection.find(query).toArray();
+            res.send(orders);
+        });
+
+        //getting per order data
+        app.get('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const order = await ordersCollection.findOne(query);
+            res.send(order);
+        });
+
+
 
 
         /// users ///
@@ -142,7 +188,7 @@ async function run() {
         });
 
         //delete user
-        app.delete('/users/:id', async (req, res) => {
+        app.delete('/users/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await usersCollection.deleteOne(query);
@@ -233,6 +279,21 @@ async function run() {
             console.log(user)
             res.send({ isAdmin: user?.role === 'admin' });
         });
+
+
+        //updating a new field
+        /* app.get('/addadvertise', async (req, res) => {
+            const query = {};
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    advertise: "false"
+                }
+            };
+            const result = await productsCollection.updateMany(query, updatedDoc, options);
+            res.send(result);
+
+        }); */
 
 
 
