@@ -168,6 +168,43 @@ async function run() {
             res.send(result);
         });
 
+        ///set to advertise
+        app.put('/products/advertise/:id', async (req, res) => {
+            const advertiseStatus = req.query.advertise;
+            console.log(advertiseStatus);
+            const id = req.params.id;
+            const queryId = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            let updatedDoc;
+            if (advertiseStatus === "false") {
+                updatedDoc = {
+                    $set: {
+                        advertise: 'true'
+                    }
+                };
+            }
+            else {
+                updatedDoc = {
+                    $set: {
+                        advertise: 'false'
+                    }
+                };
+            }
+
+
+
+            const result = await productsCollection.updateOne(queryId, updatedDoc, options);
+            res.send(result);
+        });
+
+
+        ///get all advertisements
+        app.get('/advertisements', async (req, res) => {
+            const query = { resale_status: 'Available', advertise: 'true' };
+            const products = await productsCollection.find(query).toArray();
+            res.send(products);
+        });
+
         app.get('/allproducts', async (req, res) => {
             const query = {};
             const products = await productsCollection.find(query).toArray();
@@ -267,6 +304,8 @@ async function run() {
             const seller = await usersCollection.findOne(query);
             res.send(seller);
         });
+
+
 
 
 
