@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
+// console.log(process.env.STRIPE_SECRET_KEY)
+
 //middlewares
 app.use(cors());
 app.use(express.json());
@@ -99,11 +101,11 @@ async function run() {
 
         ///stripe///
         //stripe payment api
+
         app.post('/create-payment-intent', async (req, res) => {
-            const order = req.body;
-            const price = order.resale_price;
+            const booking = req.body;
+            const price = booking.price;
             const amount = price * 100;
-            console.log(amount);
 
             const paymentIntent = await stripe.paymentIntents.create({
                 currency: 'usd',
@@ -111,14 +113,34 @@ async function run() {
                 "payment_method_types": [
                     "card"
                 ]
-
             });
-            console.log(paymentIntent.client_secret)
 
             res.send({
                 clientSecret: paymentIntent.client_secret,
             });
         });
+
+
+        /*  app.post('/create-payment-intent', async (req, res) => {
+             const order = req.body;
+             const price = order.resale_price;
+             const amount = parseFloat(price * 100);
+             console.log(amount);
+ 
+             const paymentIntent = await stripe.paymentIntents.create({
+                 currency: 'usd',
+                 amount: amount,
+                 "payment_method_types": [
+                     "card"
+                 ]
+ 
+             });
+             console.log(paymentIntent.client_secret)
+ 
+             res.send({
+                 clientSecret: paymentIntent.client_secret,
+             });
+         }); */
 
 
 
@@ -171,7 +193,7 @@ async function run() {
         ///set to advertise
         app.put('/products/advertise/:id', async (req, res) => {
             const advertiseStatus = req.query.advertise;
-            console.log(advertiseStatus);
+            // console.log(advertiseStatus);
             const id = req.params.id;
             const queryId = { _id: ObjectId(id) };
             const options = { upsert: true };
