@@ -150,7 +150,7 @@ async function run() {
             const query = { email: email }
             const user = await usersCollection.findOne(query);
             if (user) {
-                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: '12d' });
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: '2d' });
                 return res.send({ accessToken: token });
             }
 
@@ -266,7 +266,7 @@ async function run() {
             const user = req.body;
             // console.log(user);
 
-            const query = {}
+            /* const query = {}
             const allUsers = await usersCollection.find(query).toArray();
             const existingUser = allUsers.find(existingUser => existingUser.email === user.email)
             // console.log('existing', existingUser)
@@ -277,7 +277,10 @@ async function run() {
             else {
                 const result = await usersCollection.insertOne(user);
                 res.send(result);
-            }
+            } */
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+
 
         });
 
